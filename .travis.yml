@@ -43,6 +43,7 @@ branches:
   only:
     - master
     - /^[0-9]+[.][0-9]+[.][0-9]+$/
+    - gssoc19
 
 cache:
   timeout: 500
@@ -99,7 +100,9 @@ script:
   - bundle exec fastlane ensure_clean_git
 
   - |
-    if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
+    # TODO(dotdoom): figure out a better way to filter out non-master branches.
+    if [[ "$TRAVIS_PULL_REQUEST" == "false" &&
+          "$TRAVIS_BRANCH" != "gssoc19" ]]; then
       echo 'Building a tag or a branch. Deploy Firebase to debug,'
       echo 'publish to Play Store (internal track).'
 

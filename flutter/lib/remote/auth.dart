@@ -53,6 +53,7 @@ class User {
     if (_dataSource.providerData.length > 1) {
       // TODO(dotdoom): show linked accounts as icons in UI.
       const providerShortName = <SignInProvider, String>{
+        // TODO(dotdoom): add more providers here #944.
         SignInProvider.google: 'G',
       };
       assert(providerShortName.length == SignInProvider.values.length);
@@ -65,10 +66,13 @@ class User {
 
   static SignInProvider _parseSignInProvider(String providerId) {
     switch (providerId) {
+      // TODO(dotdoom): use GoogleAuthProvider.providerId once it's a const:
+      //                https://github.com/flutter/plugins/pull/1292
       case 'google.com':
         return SignInProvider.google;
       case 'firebase':
         return null;
+      // TODO(dotdoom): add more providers here #944.
     }
     return null;
   }
@@ -111,20 +115,20 @@ class Auth {
     if (provider == null) {
       user = await FirebaseAuth.instance.signInAnonymously();
     } else {
+      AuthCredential credential;
       switch (provider) {
         case SignInProvider.google:
-          if (forceAccountPicker) {
-            await _googleSignIn.signOut();
-          }
-
-          final googleAccount = await _googleSignIn.signIn();
-          if (googleAccount == null) {
-            return;
-          }
-          user = await _signInWithGoogle(googleAccount);
+          credential =
+              await _getGoogleCredential(signOutFirst: forceAccountPicker);
           break;
+        // TODO(dotdoom): handle other providers here (ex.: Facebook) #944.
       }
 
+      user = await ((_currentUser == null)
+          ? FirebaseAuth.instance.signInWithCredential(credential)
+          : FirebaseAuth.instance.linkWithCredential(credential));
+
+      // After `await`, `_currentUser` is set by `onAuthStateChanged` callback.
       if (await _updateProfileFromProviders(user)) {
         _setCurrentUser(await FirebaseAuth.instance.currentUser());
       }
@@ -137,12 +141,16 @@ class Auth {
   Future<void> signInSilently() async {
     var firebaseUser = await FirebaseAuth.instance.currentUser();
     if (firebaseUser == null) {
-      final googleAccount = await _googleSignIn.signInSilently();
-      if (googleAccount != null) {
-        firebaseUser = await _signInWithGoogle(googleAccount);
+      // TODO(dotdoom): chain other _getXXXCredential(silent: true) here #944.
+      final credential = await _getGoogleCredential(silent: true);
+
+      if (credential != null) {
+        firebaseUser =
+            await FirebaseAuth.instance.signInWithCredential(credential);
       }
     }
 
+    // After `await`, `_currentUser` is set by `onAuthStateChanged` callback.
     if (firebaseUser != null) {
       if (await _updateProfileFromProviders(firebaseUser)) {
         _setCurrentUser(await FirebaseAuth.instance.currentUser());
@@ -153,20 +161,34 @@ class Auth {
   /// Sign out of Firebase, but without signing out of linked providers.
   Future<void> signOut() => FirebaseAuth.instance.signOut();
 
-  Future<FirebaseUser> _signInWithGoogle(GoogleSignInAccount account) async {
-    final googleAuth = await account.authentication;
-    if (_currentUser == null) {
-      return FirebaseAuth.instance.signInWithGoogle(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+  Future<AuthCredential> _getGoogleCredential(
+      {silent = false, signOutFirst = false}) async {
+    assert(!(silent && signOutFirst),
+        'Silent Sign In is meaningless if Sign Out is forced first');
+    if (signOutFirst) {
+      await _googleSignIn.signOut();
     }
 
-    // TODO(dotdoom): remove this assert when we add more providers (ex. FB).
-    assert(_currentUser.isAnonymous);
-    return FirebaseAuth.instance.linkWithGoogleCredential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
+    final account = await (silent
+        ? _googleSignIn.signInSilently()
+        : _googleSignIn.signIn());
+    if (account == null) {
+      return null;
+    }
+    final auth = await account.authentication;
+    // NOTE: `auth` may contain an access token that is not valid at this point
+    //       anymore, or will expire in a few seconds. There is no guarantee
+    //       that the token is up to date. If this happens, further use of the
+    //       token (e.g. `signInWithCredential`) will fail. To recover from
+    //       this, we can force token re-generation when signIn fails, by using
+    //       `await account.clearAuthCache()`. Note that `getCredential()` call
+    //       below will never fail as it merely copies tokens into a different
+    //       structure without validation.
+    //       Another solution is to always call `clearAuthCache()`, but what are
+    //       the side effects of it?
+    return GoogleAuthProvider.getCredential(
+      accessToken: auth.accessToken,
+      idToken: auth.idToken,
     );
   }
 
