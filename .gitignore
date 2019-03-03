@@ -3,6 +3,9 @@
 .vscode/
 build/
 
+# Bundler config
+.bundle/
+
 /flutter/.packages
 /flutter/.pub/
 /flutter/packages

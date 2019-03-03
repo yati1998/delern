@@ -17,6 +17,7 @@ env:
     - PAGER=cat
     - SDK_ROOT="$HOME/sdk"
     - ANDROID_SDK_ROOT="$SDK_ROOT/android"
+    - BUILD_LOG=/tmp/build.log
     # Gradle uses old env: https://issuetracker.google.com/issues/125138969.
     - ANDROID_HOME="$ANDROID_SDK_ROOT"
     - PATH="$SDK_ROOT/flutter/bin:$SDK_ROOT/google-cloud-sdk/bin:$PATH"
@@ -32,6 +33,9 @@ env:
     # A workaround to hide large dumps of text files, see also
     # https://github.com/flutter/flutter/pull/4989.
     - BOT=false
+    # npm: less verbose, do not save installed packages.
+    - NPM_CONFIG_LOGLEVEL=error
+    - NPM_CONFIG_SAVE=false
 
 os: osx
 
@@ -42,7 +46,7 @@ osx_image: xcode10.1
 branches:
   only:
     - master
-    - /^[0-9]+[.][0-9]+[.][0-9]+$/
+    - /^[0-9]+[.][0-9]+$/
     - gssoc19
 
 cache:
@@ -56,99 +60,21 @@ cache:
     - $SDK_ROOT/flutter
 
 # When one of the steps in the install fails, the build stops immediately and is
-# marked as errored.
-install:
-  - tools/ci.sh
-
-  # Install and build flutter (may be cached)
-  - flutter upgrade || git clone --depth=2 --branch=beta
-    https://github.com/flutter/flutter.git "${SDK_ROOT?}/flutter"
-  - flutter precache
-  - flutter --version
-
-  - bundle --version
-  # TODO(dotdoom): make it bundle install --deployment.
-  - bundle install
-
-  # TODO(dotdoom): file bug: Travis ignores node_js and .nvmrc for generic lang.
-  # Firebase requires Node version > 8.
-  - nvm install 8
-  - nvm alias default 8
-
-  - node --version
-  - npm --version
-  - ( cd firebase && npm install --no-save )
-  - ( cd firebase/functions && npm install --no-save )
-  - ( cd firebase/www && ../node_modules/.bin/bower --allow-root install )
-
-  # TODO(dotdoom): this step is very slow and should not even be necessary.
-  - pod setup
-
+# marked as errored. The after_failure is not run in this case, not printing the
+# extended log.
 # When one of the build commands returns a non-zero exit code, the Travis CI
 # build runs the subsequent commands as well, and accumulates the build result.
-script:
-  - ( cd flutter && bundle exec fastlane build )
+# We don't want it to advance to publish if test fail.
+script: |
+  tools/ci.sh dependencies &&
+  tools/ci.sh build &&
+  # Deploy only from "master" branch or a tag.
+  if [[ "$TRAVIS_PULL_REQUEST" == "false" &&
+        ( "$TRAVIS_BRANCH" == "master" || "$TRAVIS_TAG" != "" ) ]]; then
+    tools/ci.sh deploy
+  fi
 
-  - ( cd flutter && flutter test --coverage )
-  - bash <(curl -s https://codecov.io/bash)
-
-  - npm --prefix firebase run build
-  - npm --prefix firebase/functions run lint
-  - npm --prefix firebase/functions run build
-  - ( cd firebase/www && ../node_modules/.bin/polymer lint )
-
-  - bundle exec fastlane ensure_clean_git
-
-  - |
-    # TODO(dotdoom): figure out a better way to filter out non-master branches.
-    if [[ "$TRAVIS_PULL_REQUEST" == "false" &&
-          "$TRAVIS_BRANCH" != "gssoc19" ]]; then
-      echo 'Building a tag or a branch. Deploy Firebase to debug,'
-      echo 'publish to Play Store (internal track).'
-
-      # Install and configure gcloud
-      # Since the script is too noisy printing "tar -xv", we drop stderr.
-      curl -sSL https://sdk.cloud.google.com | \
-        bash -s -- --disable-prompts --install-dir="${SDK_ROOT?}" >/dev/null \
-        2>&1
-      # This is needed only for iOS to fetch Fastlane match keys repository.
-      git config --global \
-        credential.https://source.developers.google.com.helper \
-        gcloud.sh
-      gcloud version
-
-      echo "${GCLOUD_SERVICE_ACCOUNT_DATA?}" > \
-        "${GOOGLE_APPLICATION_CREDENTIALS?}"
-      gcloud auth activate-service-account \
-        --key-file "${GOOGLE_APPLICATION_CREDENTIALS?}"
-      gsutil cp gs://dasfoo-keystore/delern.jks "${ANDROID_KEYSTORE_PATH?}"
-
-      bundle exec fastlane ensure_clean_git &&
-        PROJECT=delern-debug npm --prefix firebase run deploy &&
-        PROJECT=delern-e1b33 npm --prefix firebase run deploy &&
-        ( cd flutter && bundle exec fastlane android publish ) &&
-
-        if [ -n "$TRAVIS_TAG" ]; then
-          echo 'Building a tag. Upload to TestFlight.'
-          ( cd flutter && bundle exec fastlane ios publish )
-        elif [[ "$TRAVIS_BRANCH" == "master" ]]; then
-          echo 'Building "master" branch. Build debug version, sign. Do not'
-          echo 'upload to TestFlight (review process is too slow, besides,'
-          echo 'version number format will look like a.b.c-N-gCOMMIT, which is'
-          echo 'not accepted by Apple Store).'
-
-          ( cd flutter && bundle exec fastlane ios build )
-        else
-          echo 'Unexpected condition for triggering the build!' >&2
-          false
-        fi
-    else
-      echo 'Building a PR. No access to keys. Build debug version w/o signing.'
-      ( cd flutter && bundle exec fastlane android build ) &&
-        # TODO(dotdoom): write proper lane for fastlane.
-        ( cd flutter && flutter build ios --debug --no-codesign ) &&
-        bundle exec fastlane ensure_clean_git
-    fi
+after_failure: cat "${BUILD_LOG?}"
 
 before_cache:
   - |
@@ -161,3 +87,4 @@ before_cache:
     rm -fr $HOME/.gradle/caches/*/plugin-resolution/
     rm -fr $HOME/.gradle/caches/*/fileHashes/
     rm -fr $HOME/.gradle/caches/*/scripts-remapped/
+    rm -fr $HOME/.gradle/caches/*/scripts/

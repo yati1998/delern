@@ -28,7 +28,7 @@ def android_build(options={})
   flutter({
     action: 'build',
     build_number_override: "ci+#{CI_BUILD_NUMBER_BASE}",
-    build_name_override: 'vcs*',
+    build_name_override: '^vcs*',
   }.merge(options))
 end
 
@@ -60,24 +60,20 @@ end
 
 platform :ios do
   lane :build do
-    # Set up OS X keychain and switch match to readonly model. This command has
-    # no effect outside CI.
-    setup_travis
-
-    match(
-      type: 'development',
-      app_identifier: 'org.dasfoo.delern.debug',
-    )
     flutter(
       action: 'build',
       build_number_override: "ci+#{CI_BUILD_NUMBER_BASE}",
-      build_name_override: 'vcs*',
+      build_name_override: '^vcs*',
       debug: true,
+      codesign: false,
     )
   end
 
   lane :publish do
+    # Set up OS X keychain and switch match to readonly model. This command has
+    # no effect outside CI.
     setup_travis
+
     match(
       type: 'appstore',
       app_identifier: 'org.dasfoo.delern',
@@ -91,7 +87,7 @@ platform :ios do
       # TODO(dotdoom): since this changes Podfile.lock and other files to
       #                symlink the release version of packages, we have to clear
       #                dirty mark.
-      build_name_override: 'vcs',
+      build_name_override: '^vcs',
     )
     gym(silent: true)
     # TODO(dotdoom): set also "changelog"
