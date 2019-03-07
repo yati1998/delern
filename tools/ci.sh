@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# TODO(dotdoom): fold some commands? Ex.:
+#                https://github.com/travis-ci/travis-ci/issues/2285.
+
 set -e
 
 if [ -z "$CI" -a -t 1 ]; then
@@ -144,8 +147,8 @@ deploy() {
 		_section 'Publishing iOS app'
 		( cd flutter && bundle exec fastlane ios publish )
 		# Do not verify clean Git because we know that the build process
-		# unfortunately changes the files.
-		# TODO(dotdoom): file a bug for this.
+		# unfortunately changes the files:
+		# https://github.com/flutter/flutter/issues/28802.
 	fi
 }
 

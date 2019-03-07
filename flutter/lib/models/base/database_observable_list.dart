@@ -25,6 +25,7 @@ enum _DatabaseEventType {
 // TODO(dotdoom): how about removing KeyedListItem requirement and instead keep
 //                track of the key internally to the list? Could help if the
 //                models are mutable like they are right now.
+// TODO(dotdoom): consider basing some lists on DelegatingList.
 class DatabaseObservableList<T extends KeyedListItem> extends ObservableList<T>
     with KeyedListMixin<T>
     implements DelayedInitializationObservableList<T> {

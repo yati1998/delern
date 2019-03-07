@@ -86,7 +86,8 @@ platform :ios do
       build_number_override: "ci+#{CI_BUILD_NUMBER_BASE}",
       # TODO(dotdoom): since this changes Podfile.lock and other files to
       #                symlink the release version of packages, we have to clear
-      #                dirty mark.
+      #                dirty mark:
+      #                https://github.com/flutter/flutter/issues/28802.
       build_name_override: '^vcs',
     )
     gym(silent: true)
