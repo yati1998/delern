@@ -28,7 +28,7 @@ class DecksList extends StatefulWidget {
         super(key: key);
 
   @override
-  DecksListState createState() => DecksListState();
+  _DecksListState createState() => _DecksListState();
 }
 
 class _ArrowToFloatingActionButton extends CustomPainter {
@@ -91,7 +91,7 @@ class ArrowToFloatingActionButtonWidget extends StatelessWidget {
           child: child));
 }
 
-class DecksListState extends State<DecksList> {
+class _DecksListState extends State<DecksList> {
   DecksListBloc _bloc;
 
   @override
