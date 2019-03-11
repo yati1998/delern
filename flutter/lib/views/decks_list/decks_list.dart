@@ -173,6 +173,7 @@ class DeckListItemWidget extends StatelessWidget {
                 ),
                 _buildNumberOfCards(context),
                 _buildDeckMenu(context),
+                DeckMenu(),
               ],
             ),
           ),
@@ -300,6 +301,114 @@ class DeckListItemWidget extends StatelessWidget {
         }
         break;
     }
+  }
+}
+
+class DeckMenu extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => _DeckMenuState();
+}
+
+class _DeckMenuState extends State<DeckMenu>
+    with SingleTickerProviderStateMixin {
+  Animation<Alignment> moveAnimation;
+  Animation<double> opacityAnimation;
+  AnimationController controller;
+  final duration = Duration(milliseconds: 270);
+
+  @override
+  void initState() {
+    super.initState();
+    controller = AnimationController(vsync: this, duration: duration);
+
+    final anim = CurvedAnimation(parent: controller, curve: Curves.linear);
+    moveAnimation = Tween<Alignment>(
+            begin: Alignment.centerRight, end: Alignment.bottomRight)
+        .animate(anim);
+    opacityAnimation = Tween(begin: 0.0, end: 1.0).animate(anim);
+  }
+
+  Widget getItem(String menuItemName) {
+    return RaisedButton(
+      color: Colors.tealAccent,
+      padding: EdgeInsets.all(8.0),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10))),
+      child: Text(menuItemName),
+      onPressed: () {
+        controller.reverse();
+      },
+    );
+  }
+
+  Widget buildPrimaryItem(IconData source) {
+    const size = 45.0;
+    return Material(
+      borderRadius: BorderRadius.circular(40),
+      child: Container(
+        width: size,
+        height: size,
+        child: Icon(
+          source,
+        ),
+      ),
+    );
+  }
+
+  final double expandedSize = 180.0;
+  final double hiddenSize = 20.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final menu = _buildMenu(context);
+
+    return AnimatedBuilder(
+        animation: controller,
+        builder: (context, child) => Container(
+              width: 100,
+              height:
+                  hiddenSize + (expandedSize - hiddenSize) * controller.value,
+              child: Stack(
+                children: <Widget>[
+                  FadeTransition(
+                    opacity: opacityAnimation,
+                    child: Align(
+                        alignment: moveAnimation.value,
+                        child: Container(
+                            padding: EdgeInsets.only(bottom: 90),
+                            child: getItem(menu[_DeckMenuItemType.add]))),
+                  ),
+                  FadeTransition(
+                    opacity: opacityAnimation,
+                    child: Align(
+                        alignment: moveAnimation.value,
+                        child: Container(
+                          padding: EdgeInsets.only(bottom: 50),
+                          child: getItem(menu[_DeckMenuItemType.edit]),
+                        )),
+                  ),
+                  FadeTransition(
+                    opacity: opacityAnimation,
+                    child: Align(
+                        alignment: moveAnimation.value,
+                        child: getItem(menu[_DeckMenuItemType.setting])),
+                  ),
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: GestureDetector(
+                        onTap: () {
+                          controller.isCompleted
+                              ? controller.reverse()
+                              : controller.forward();
+                        },
+                        child: buildPrimaryItem(
+                            controller.isCompleted || controller.isAnimating
+                                ? Icons.close
+                                : Icons.more_vert)),
+                  )
+                ],
+              ),
+            ));
   }
 }
 
