@@ -392,51 +392,57 @@ class _DeckMenuState extends State<DeckMenu>
 
     return AnimatedBuilder(
         animation: controller,
-        builder: (context, child) => Container(
-              width: 100,
-              height:
-                  hiddenSize + (expandedSize - hiddenSize) * controller.value,
-              child: Stack(
-                children: <Widget>[
-                  FadeTransition(
-                    opacity: opacityAnimation,
-                    child: Align(
-                        alignment: moveAnimation.value,
-                        child: Container(
-                            padding: EdgeInsets.only(bottom: 90),
-                            child: getItem(menu[_DeckMenuItemType.add]))),
+        builder: (context, child) => SizedOverflowBox(
+            size: Size(100, 100),
+            alignment: Alignment.topLeft,
+            child: Container(
+                width: 100,
+                height: 200,
+                child: Container(
+                  width: 100,
+                  height: hiddenSize +
+                      (expandedSize - hiddenSize) * controller.value,
+                  child: Stack(
+                    children: <Widget>[
+                      FadeTransition(
+                        opacity: opacityAnimation,
+                        child: Align(
+                            alignment: moveAnimation.value,
+                            child: Container(
+                                padding: EdgeInsets.only(bottom: 90),
+                                child: getItem(menu[_DeckMenuItemType.add]))),
+                      ),
+                      FadeTransition(
+                        opacity: opacityAnimation,
+                        child: Align(
+                            alignment: moveAnimation.value,
+                            child: Container(
+                              padding: EdgeInsets.only(bottom: 50),
+                              child: getItem(menu[_DeckMenuItemType.edit]),
+                            )),
+                      ),
+                      FadeTransition(
+                        opacity: opacityAnimation,
+                        child: Align(
+                            alignment: moveAnimation.value,
+                            child: getItem(menu[_DeckMenuItemType.setting])),
+                      ),
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: GestureDetector(
+                            onTap: () {
+                              controller.isCompleted
+                                  ? controller.reverse()
+                                  : controller.forward();
+                            },
+                            child: buildPrimaryItem(
+                                controller.isCompleted || controller.isAnimating
+                                    ? Icons.close
+                                    : Icons.more_vert)),
+                      )
+                    ],
                   ),
-                  FadeTransition(
-                    opacity: opacityAnimation,
-                    child: Align(
-                        alignment: moveAnimation.value,
-                        child: Container(
-                          padding: EdgeInsets.only(bottom: 50),
-                          child: getItem(menu[_DeckMenuItemType.edit]),
-                        )),
-                  ),
-                  FadeTransition(
-                    opacity: opacityAnimation,
-                    child: Align(
-                        alignment: moveAnimation.value,
-                        child: getItem(menu[_DeckMenuItemType.setting])),
-                  ),
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: GestureDetector(
-                        onTap: () {
-                          controller.isCompleted
-                              ? controller.reverse()
-                              : controller.forward();
-                        },
-                        child: buildPrimaryItem(
-                            controller.isCompleted || controller.isAnimating
-                                ? Icons.close
-                                : Icons.more_vert)),
-                  )
-                ],
-              ),
-            ));
+                ))));
   }
 }
 
