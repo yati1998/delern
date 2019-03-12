@@ -34,12 +34,16 @@ class _DeckSharingState extends State<DeckSharing> {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
+          iconTheme: const IconThemeData(
+            color: Colors.white,
+          ),
           title: Text(widget._deck.name),
           actions: <Widget>[
             Builder(
               builder: (context) => SlowOperationWidget(
                     (cb) => IconButton(
                         icon: const Icon(Icons.send),
+                        tooltip: 'Send',
                         onPressed: _isEmailCorrect()
                             ? cb(() => _shareDeck(_accessValue, context))
                             : null),
@@ -72,7 +76,12 @@ class _DeckSharingState extends State<DeckSharing> {
           onChanged: (text) {
             setState(() {});
           },
-          style: AppStyles.primaryText,
+          style: TextStyle(
+            fontSize: MediaQuery.of(context).textScaleFactor >=
+                    14.00
+                ? 14.00 * 3.52
+                : 14.00 * 1.50,
+          ),
           decoration: InputDecoration(
             hintText: AppLocalizations.of(context).emailAddressHint,
           ),
@@ -199,6 +208,11 @@ class _DeckUsersState extends State<DeckUsersWidget> {
           : Text(
               displayName,
               style: AppStyles.primaryText,
+              textScaleFactor:
+                  MediaQuery.of(context).textScaleFactor >
+                          1.00
+                      ? 4.52
+                      : 1.50,
             ),
       trailing: DeckAccessDropdownWidget(
         value: accessViewModel.access,
