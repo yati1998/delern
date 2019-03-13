@@ -102,12 +102,16 @@ class Auth {
 
   /// Sign in using a specified provider. If the user is currently signed in
   /// anonymously, try to preserve uid. This will work only if the user hasn't
-  /// signed in with this provider before, throwing PlatformException otherwise.
+  /// signed in with this provider before, otherwise throws PlatformException.
   ///
   /// Some providers may skip through the account picker window if sign in has
   /// already happened (e.g. after a failed account linking). To give user a
   /// choice, we explicitly sign out. If you don't want this behavior, set
   /// [forceAccountPicker] to false.
+  ///
+  /// NOTE: if the user cancels sign in (e.g. presses "Back" when presented an
+  /// account picker), the Future will still complete successfully, but no
+  /// changes are done.
   Future<void> signIn(SignInProvider provider,
       {forceAccountPicker = true}) async {
     FirebaseUser user;
@@ -122,6 +126,11 @@ class Auth {
               await _getGoogleCredential(signOutFirst: forceAccountPicker);
           break;
         // TODO(dotdoom): handle other providers here (ex.: Facebook) #944.
+      }
+
+      // Credential is unset, usually cancelled by user.
+      if (credential == null) {
+        return;
       }
 
       user = await ((_currentUser == null)
