@@ -35,7 +35,7 @@ class _DeckSharingState extends State<DeckSharing> {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
           iconTheme: const IconThemeData(
-            color: Colors.white,
+            color: Colors.black,
           ),
           title: Text(widget._deck.name),
           actions: <Widget>[
@@ -76,15 +76,9 @@ class _DeckSharingState extends State<DeckSharing> {
           onChanged: (text) {
             setState(() {});
           },
-          style: TextStyle(
-            fontSize: MediaQuery.of(context).textScaleFactor >=
-                    14.00
-                ? 14.00 * 3.52
-                : 14.00 * 1.50,
-          ),
           decoration: InputDecoration(
-            hintText: AppLocalizations.of(context).emailAddressHint,
-          ),
+              hintText: AppLocalizations.of(context).emailAddressHint,
+              hintStyle: const TextStyle(color: Colors.black)),
         ),
         trailing: DeckAccessDropdownWidget(
           value: _accessValue,
@@ -207,12 +201,9 @@ class _DeckUsersState extends State<DeckUsersWidget> {
           ? ProgressIndicatorWidget()
           : Text(
               displayName,
-              style: AppStyles.primaryText,
-              textScaleFactor:
-                  MediaQuery.of(context).textScaleFactor >
-                          1.00
-                      ? 4.52
-                      : 1.50,
+              style: const TextStyle(
+                fontSize: 24.0,
+              ),
             ),
       trailing: DeckAccessDropdownWidget(
         value: accessViewModel.access,
