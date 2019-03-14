@@ -40,6 +40,7 @@ class _DeckSharingState extends State<DeckSharing> {
               builder: (context) => SlowOperationWidget(
                     (cb) => IconButton(
                         icon: const Icon(Icons.send),
+                        tooltip: 'Send',
                         onPressed: _isEmailCorrect()
                             ? cb(() => _shareDeck(_accessValue, context))
                             : null),
@@ -72,10 +73,9 @@ class _DeckSharingState extends State<DeckSharing> {
           onChanged: (text) {
             setState(() {});
           },
-          style: AppStyles.primaryText,
           decoration: InputDecoration(
-            hintText: AppLocalizations.of(context).emailAddressHint,
-          ),
+              hintText: AppLocalizations.of(context).emailAddressHint,
+              hintStyle: const TextStyle(color: Colors.black)),
         ),
         trailing: DeckAccessDropdownWidget(
           value: _accessValue,
@@ -198,7 +198,9 @@ class _DeckUsersState extends State<DeckUsersWidget> {
           ? ProgressIndicatorWidget()
           : Text(
               displayName,
-              style: AppStyles.primaryText,
+              style: const TextStyle(
+                fontSize: 24.0,
+              ),
             ),
       trailing: DeckAccessDropdownWidget(
         value: accessViewModel.access,
