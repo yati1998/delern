@@ -34,9 +34,6 @@ class _DeckSharingState extends State<DeckSharing> {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
-          iconTheme: const IconThemeData(
-            color: Colors.black,
-          ),
           title: Text(widget._deck.name),
           actions: <Widget>[
             Builder(
