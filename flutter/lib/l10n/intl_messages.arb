@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "@@last_modified": "2019-01-05T17:25:37.219682",
+  "@@last_modified": "2019-03-16T11:38:26.885371",
   "navigationDrawerSignOut": "Sign Out",
   "@navigationDrawerSignOut": {
     "description": "Sign Out in Navigation Drawer",
@@ -558,6 +558,27 @@
   "cardAndReversedAddedUserMessage": "Card and reversed card were added",
   "@cardAndReversedAddedUserMessage": {
     "description": "Card and reversed card were added",
+    "type": "text",
+    "placeholders": {
+    }
+  },
+  "imageFromGalleryLabel": "From Gallery",
+  "@imageFromGalleryLabel": {
+    "description": "Upload image from Gallery",
+    "type": "text",
+    "placeholders": {
+    }
+  },
+  "imageFromPhotoLabel": "Take Photo",
+  "@imageFromPhotoLabel": {
+    "description": "Take photo to upload image",
+    "type": "text",
+    "placeholders": {
+    }
+  },
+  "accessibilityAddImageLabel": "Add Image",
+  "@accessibilityAddImageLabel": {
+    "description": "Add Image Accessibility label",
     "type": "text",
     "placeholders": {
     }

@@ -121,25 +121,73 @@ class _CardCreateUpdateState extends State<CardCreateUpdate> {
     _bloc.saveCardSink.add(null);
   }
 
+  Widget _buildImageMenuItem(IconData icon, String text) => Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          Icon(
+            icon,
+            semanticLabel: text,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 5),
+            child: Text(text),
+          ),
+        ],
+      );
+
+  Map<_ImageMenuItemSource, Widget> _buildImageMenu(BuildContext context) {
+    var imageMenu = <_ImageMenuItemSource, Widget>{}
+      ..[_ImageMenuItemSource.gallery] = _buildImageMenuItem(
+          Icons.add_photo_alternate,
+          AppLocalizations.of(context).imageFromGalleryLabel)
+      ..[_ImageMenuItemSource.photo] = _buildImageMenuItem(
+          Icons.add_a_photo, AppLocalizations.of(context).imageFromPhotoLabel);
+    return imageMenu;
+  }
+
+  Widget _buildImageMenuButton() => PopupMenuButton<_ImageMenuItemSource>(
+        icon: Icon(
+          Icons.attachment,
+          semanticLabel:
+              AppLocalizations.of(context).accessibilityAddImageLabel,
+        ),
+        // TODO(ksheremet): Open gallery or camera on click
+        onSelected: print,
+        itemBuilder: (context) => _buildImageMenu(context)
+            .entries
+            .map((entry) => PopupMenuItem<_ImageMenuItemSource>(
+                  value: entry.key,
+                  child: entry.value,
+                ))
+            .toList(),
+      );
+
   Widget _buildUserInput() {
     final widgetsList = <Widget>[
       // TODO(ksheremet): limit lines in TextField
-      TextField(
-        key: const Key('frontCardInput'),
-        autofocus: true,
-        focusNode: _frontSideFocus,
-        maxLines: null,
-        keyboardType: TextInputType.multiline,
-        controller: _frontTextController,
-        onChanged: (text) {
-          setState(() {
-            _bloc.frontSideTextSink.add(text);
-            _isChanged = true;
-          });
-        },
-        style: AppStyles.primaryText,
-        decoration: InputDecoration(
-            hintText: AppLocalizations.of(context).frontSideHint),
+      Row(
+        children: <Widget>[
+          Expanded(
+            child: TextField(
+              key: const Key('frontCardInput'),
+              autofocus: true,
+              focusNode: _frontSideFocus,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              controller: _frontTextController,
+              onChanged: (text) {
+                setState(() {
+                  _bloc.frontSideTextSink.add(text);
+                  _isChanged = true;
+                });
+              },
+              style: AppStyles.primaryText,
+              decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context).frontSideHint),
+            ),
+          ),
+          _buildImageMenuButton(),
+        ],
       ),
       TextField(
         key: const Key('backCardInput'),
@@ -194,3 +242,5 @@ class _CardCreateUpdateState extends State<CardCreateUpdate> {
     FocusScope.of(context).requestFocus(_frontSideFocus);
   }
 }
+
+enum _ImageMenuItemSource { gallery, photo }
