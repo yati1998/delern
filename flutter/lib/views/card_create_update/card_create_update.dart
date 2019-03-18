@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:delern_flutter/flutter/localization.dart';
 import 'package:delern_flutter/flutter/styles.dart';
 import 'package:delern_flutter/flutter/user_messages.dart';
@@ -7,6 +9,7 @@ import 'package:delern_flutter/view_models/card_create_update_bloc.dart';
 import 'package:delern_flutter/views/helpers/save_updates_dialog.dart';
 import 'package:delern_flutter/views/helpers/sign_in_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CardCreateUpdate extends StatefulWidget {
   final CardModel card;
@@ -151,8 +154,12 @@ class _CardCreateUpdateState extends State<CardCreateUpdate> {
           semanticLabel:
               AppLocalizations.of(context).accessibilityAddImageLabel,
         ),
-        // TODO(ksheremet): Open gallery or camera on click
-        onSelected: print,
+        // TODO(ksheremet): Display list of images
+        onSelected: (source) async {
+          print(source);
+          var file = await _openImage(source);
+          print('File path = $file');
+        },
         itemBuilder: (context) => _buildImageMenu(context)
             .entries
             .map((entry) => PopupMenuItem<_ImageMenuItemSource>(
@@ -161,6 +168,22 @@ class _CardCreateUpdateState extends State<CardCreateUpdate> {
                 ))
             .toList(),
       );
+
+  // TODO(ksheremet): If user didn't allow to user camera, ask again
+  //                  when user opens again
+  // TODO(ksheremet): Check whether camera is installed
+  Future<File> _openImage(_ImageMenuItemSource imageSource) async {
+    File image;
+    switch (imageSource) {
+      case _ImageMenuItemSource.gallery:
+        image = await ImagePicker.pickImage(source: ImageSource.gallery);
+        break;
+      case _ImageMenuItemSource.photo:
+        image = await ImagePicker.pickImage(source: ImageSource.camera);
+        break;
+    }
+    return image;
+  }
 
   Widget _buildUserInput() {
     final widgetsList = <Widget>[
