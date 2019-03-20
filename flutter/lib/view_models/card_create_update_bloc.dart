@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:delern_flutter/flutter/localization.dart';
 import 'package:delern_flutter/flutter/user_messages.dart';
@@ -18,6 +19,7 @@ class CardCreateUpdateBloc {
   final AppLocalizations locale;
   final bool isAddOperation;
   bool _isOperationEnabled = true;
+  final List<File> frontImagesList = [];
 
   CardCreateUpdateBloc(
       {@required this.uid, @required cardModel, @required this.locale})
