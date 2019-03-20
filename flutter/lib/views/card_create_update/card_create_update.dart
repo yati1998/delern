@@ -148,7 +148,8 @@ class _CardCreateUpdateState extends State<CardCreateUpdate> {
     return imageMenu;
   }
 
-  Widget _buildImageMenuButton() => PopupMenuButton<_ImageMenuItemSource>(
+  Widget _buildImageMenuButton(List<File> imageFiles) =>
+      PopupMenuButton<_ImageMenuItemSource>(
         icon: Icon(
           Icons.attachment,
           semanticLabel:
@@ -158,7 +159,7 @@ class _CardCreateUpdateState extends State<CardCreateUpdate> {
           var file = await _openImage(source);
           if (file != null) {
             setState(() {
-              _bloc.frontImagesList.add(file);
+              imageFiles.add(file);
             });
           }
         },
@@ -187,6 +188,42 @@ class _CardCreateUpdateState extends State<CardCreateUpdate> {
     return image;
   }
 
+  List<Widget> _buildImagesList(List<File> images) {
+    var widgetsList = <Widget>[];
+    for (var i = 0; i < images.length; i++) {
+      var imageFile = images[i];
+      widgetsList.add(
+        Padding(
+            padding: const EdgeInsets.all(16),
+            child: Stack(children: <Widget>[
+              Image.file(imageFile),
+              Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8, top: 8),
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          // TODO(ksheremet): Consider to create animation
+                          setState(() {
+                            images.removeAt(i);
+                          });
+                        }),
+                  ),
+                ),
+              ),
+            ])),
+      );
+    }
+    return widgetsList;
+  }
+
+  // TODO(ksheremet): Refactor
   Widget _buildUserInput() {
     final frontWidgetsInput = <Widget>[
       // TODO(ksheremet): limit lines in TextField
@@ -211,68 +248,48 @@ class _CardCreateUpdateState extends State<CardCreateUpdate> {
                   hintText: AppLocalizations.of(context).frontSideHint),
             ),
           ),
-          _buildImageMenuButton(),
+          _buildImageMenuButton(_bloc.frontImagesList),
         ],
       ),
     ];
 
-    // TODO(ksheremet): Display picture for back side
     final backWidgetsInput = <Widget>[
-      TextField(
-        key: const Key('backCardInput'),
-        maxLines: null,
-        keyboardType: TextInputType.multiline,
-        controller: _backTextController,
-        onChanged: (text) {
-          setState(() {
-            _bloc.backSideTextSink.add(text);
-            _isChanged = true;
-          });
-        },
-        style: AppStyles.primaryText,
-        decoration: InputDecoration(
-          hintText: AppLocalizations.of(context).backSideHint,
-        ),
+      Row(
+        children: <Widget>[
+          Expanded(
+            child: TextField(
+              key: const Key('backCardInput'),
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              controller: _backTextController,
+              onChanged: (text) {
+                setState(() {
+                  _bloc.backSideTextSink.add(text);
+                  _isChanged = true;
+                });
+              },
+              style: AppStyles.primaryText,
+              decoration: InputDecoration(
+                hintText: AppLocalizations.of(context).backSideHint,
+              ),
+            ),
+          ),
+          _buildImageMenuButton(_bloc.backImagesList),
+        ],
       ),
     ];
 
     final widgetsList = <Widget>[]..addAll(frontWidgetsInput);
 
-    // TODO(ksheremet): Refactor
     if (_bloc.frontImagesList != null && _bloc.frontImagesList.isNotEmpty) {
-      for (var i = 0; i < _bloc.frontImagesList.length; i++) {
-        var imageFile = _bloc.frontImagesList[i];
-        widgetsList.add(
-          Padding(
-              padding: const EdgeInsets.all(16),
-              child: Stack(children: <Widget>[
-                Image.file(imageFile),
-                Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 8, top: 8),
-                    child: DecoratedBox(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            // TODO(ksheremet): Consider to create animation
-                            setState(() {
-                              _bloc.frontImagesList.removeAt(i);
-                            });
-                          }),
-                    ),
-                  ),
-                ),
-              ])),
-        );
-      }
+      widgetsList.addAll(_buildImagesList(_bloc.frontImagesList));
     }
 
     widgetsList.addAll(backWidgetsInput);
+
+    if (_bloc.backImagesList != null && _bloc.backImagesList.isNotEmpty) {
+      widgetsList.addAll(_buildImagesList(_bloc.backImagesList));
+    }
 
     // Add reversed card widget it it is adding cards
     if (_bloc.isAddOperation) {

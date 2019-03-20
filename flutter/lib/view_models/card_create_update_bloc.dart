@@ -20,6 +20,7 @@ class CardCreateUpdateBloc {
   final bool isAddOperation;
   bool _isOperationEnabled = true;
   final List<File> frontImagesList = [];
+  final List<File> backImagesList = [];
 
   CardCreateUpdateBloc(
       {@required this.uid, @required cardModel, @required this.locale})
